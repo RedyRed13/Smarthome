@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="dark" lang="pl">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>SmartHome Terminal</title>
+    
+    <script type="text/javascript" src="/eel.js"></script>
+
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-dark": "#0a1118" },
+                    fontFamily: { "display": ["Space Grotesk", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Space Grotesk', sans-serif; overflow: hidden; }
+        .bg-liquid-animated {
+            background: linear-gradient(-45deg, #0a1118, #101922, #1a2633, #0f2e47);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .glass-panel {
+            background: rgba(16, 25, 34, 0.4);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-card-hover { transition: all 0.3s ease; }
+        .glass-card-hover:hover {
+            transform: translateY(-5px); background: rgba(19, 127, 236, 0.1); border-color: rgba(19, 127, 236, 0.4);
+        }
+
+        .glass-tile {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.3s ease;
+        }
+        .glass-tile:hover {
+            background: linear-gradient(135deg, rgba(19, 127, 236, 0.1) 0%, rgba(19, 127, 236, 0.02) 100%);
+            border-color: rgba(19, 127, 236, 0.3); transform: translateY(-2px);
+        }
+        .glass-tile:active { transform: scale(0.95); }
+
+        .glass-tile.wlaczony {
+            border-color: rgba(19, 127, 236, 0.6); background: linear-gradient(135deg, rgba(19, 127, 236, 0.2) 0%, rgba(19, 127, 236, 0.05) 100%);
+            box-shadow: 0 0 15px rgba(19, 127, 236, 0.3), inset 0 0 20px rgba(19, 127, 236, 0.1);
+        }
+        .glass-tile.wlaczony .ikona-tlo { background-color: rgba(19, 127, 236, 0.2); color: #137fec; }
+        .glass-tile.wlaczony h3 { color: #ffffff; }
+        .glass-tile.danger:hover { border-color: rgba(220, 38, 38, 0.6); background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%); }
+
+        .app-screen { display: none; flex-direction: column; height: 100vh; width: 100vw; overflow-y: auto; }
+        .app-screen.active { display: flex; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-liquid-animated text-slate-100 font-display selection:bg-primary selection:text-white relative">
+
+    <div id="screen-main" class="app-screen active">
+        <div class="relative z-10 w-full p-6 md:p-12 flex justify-between items-start">
+            <div class="flex flex-col gap-1">
+                <h1 class="text-3xl md:text-5xl font-bold tracking-tighter text-white drop-shadow-lg">Terminal Domowy</h1>
+                <p class="text-primary/80 font-light text-base md:text-lg tracking-wide">System Online</p>
+            </div>
+            <div class="hidden md:flex flex-col items-end glass-panel px-6 py-3 rounded-2xl">
+                <span class="text-3xl font-light text-white tracking-widest" id="clock">00:00</span>
+            </div>
+        </div>
+
+        <main class="flex-grow flex flex-col items-center justify-center p-6 w-full max-w-7xl mx-auto pb-32"> 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl items-stretch h-full max-h-[400px]">
+                <button onclick="showScreen('screen-gate')" class="group glass-panel glass-card-hover relative flex flex-col justify-between p-8 rounded-3xl text-left h-full">
+                    <div class="p-4 rounded-2xl bg-primary/20 text-primary border border-primary/30 w-max">
+                        <span class="material-symbols-outlined text-4xl">gate</span>
+                    </div>
+                    <div class="mt-auto space-y-2 pt-12">
+                        <h2 class="text-3xl font-medium text-white group-hover:text-primary transition-colors">Brama Wjazdowa</h2>
+                    </div>
+                </button>
+
+                <button onclick="showScreen('screen-light')" class="group glass-panel glass-card-hover relative flex flex-col justify-between p-8 rounded-3xl text-left h-full">
+                    <div class="p-4 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 w-max">
+                        <span class="material-symbols-outlined text-4xl">lightbulb</span>
+                    </div>
+                    <div class="mt-auto space-y-2 pt-12">
+                        <h2 class="text-3xl font-medium text-white group-hover:text-primary transition-colors">Oświetlenie Wnętrza</h2>
+                    </div>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <div id="screen-gate" class="app-screen">
+        <header class="flex items-center px-8 py-6 z-10">
+            <button onclick="showScreen('screen-main')" class="glass-panel group flex items-center gap-3 px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                <span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span> Wróć
+            </button>
+        </header>
+        <main class="flex-1 flex justify-center items-center p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+                <button onclick="sendCommand(101)" class="glass-panel glass-card-hover flex flex-col items-center justify-center gap-6 h-[280px] rounded-3xl">
+                    <div class="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center"><span class="material-symbols-outlined text-[40px]">lock_open_right</span></div>
+                    <h2 class="text-2xl font-bold">OTWÓRZ BRAMĘ</h2>
+                </button>
+                <button onclick="sendCommand(102)" class="glass-panel glass-card-hover flex flex-col items-center justify-center gap-6 h-[280px] rounded-3xl">
+                    <div class="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center"><span class="material-symbols-outlined text-[40px]">lock</span></div>
+                    <h2 class="text-2xl font-bold">ZAMKNIJ BRAMĘ</h2>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <div id="screen-light" class="app-screen">
+        <header class="w-full px-6 py-4 flex items-center gap-4 z-10">
+            <button onclick="showScreen('screen-main')" class="glass-panel group flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                <span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
+            </button>
+            <h1 class="font-display text-lg font-bold text-white ml-4">Panel Sterowania Oświetleniem</h1>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center px-6 py-4">
+            <div class="w-full max-w-5xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-8" id="grid-swiatel">
+                </div>
+        </main>
+    </div>
+
+    <div id="dimmer-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-md" onclick="zamknijPanel()"></div>
+        
+        <div id="dimmer-content" class="glass-panel relative w-full max-w-sm p-8 rounded-3xl z-10 flex flex-col items-center gap-6 transform scale-95 opacity-0 transition-all duration-300">
+            <button onclick="zamknijPanel()" class="absolute top-4 right-4 text-white/50 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            
+            <h2 id="dimmer-title" class="text-2xl font-bold text-white tracking-wide">Pokój</h2>
+            
+            <div class="w-full bg-black/40 p-6 rounded-3xl border border-white/10 flex flex-col items-center gap-6 shadow-inner">
+                <div class="flex items-end gap-1">
+                    <input type="number" id="dimmer-input" min="0" max="100" value="50"
+                            class="w-24 bg-transparent text-center text-5xl font-bold text-white focus:outline-none focus:text-primary transition-colors"
+                            oninput="aktualizujZInputa(this.value)" onchange="wyslijJasnosci()">
+                    <span class="text-2xl text-white/50 font-bold mb-1">%</span>
+                </div>
+
+                <input type="range" id="dimmer-slider" min="0" max="100" value="50" 
+                        class="w-full h-4 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary"
+                        oninput="aktualizujZSuwaka(this.value)" onchange="wyslijJasnosci()">
+            </div>
+        </div>
+    </div>
+
+    <script>
+       // --- KAFELKI ---
+        const mapowanieSwiatel = {
+            7: 'Korytarz', 6: 'Schody korytarz', 5: 'Salon', 4: 'Gabinet', 3: 'Garaż',
+            14: 'Sypialnia', 8: 'Łazienka', 2: 'Kuchnia', 1: 'Spiżarnia', 9: 'Strych',
+            11: 'Siłownia', 10: 'Strych schody'
+        };
+
+        const grid = document.getElementById('grid-swiatel');
+        grid.innerHTML = ''; // Czyszczenie siatki przed wygenerowaniem
+        
+        for (const [id, nazwa] of Object.entries(mapowanieSwiatel)) {
+            
+            // Logika ukrywania suwaka: Jeśli ID to 6 (Schody), zostawiamy puste miejsce.
+            // W przeciwnym razie generujemy przycisk suwaka.
+            let przyciskUstawien = '';
+            if (id != 6) {
+                przyciskUstawien = `
+                    <div onclick="otworzPanel(${id}, '${nazwa}')" class="absolute top-3 right-3 p-2 bg-primary/50 text-white hover:bg-primary rounded-full transition-all z-50 cursor-pointer shadow-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">tune</span>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML += `
+                <div class="glass-tile group relative flex aspect-square flex-col justify-between rounded-2xl p-6 text-left swiatlo-btn" data-id="${id}">
+                    
+                    <div class="absolute inset-0 z-10 cursor-pointer rounded-2xl" onclick="przelaczSwiatlo(this.parentElement, ${id})"></div>
+                    
+                    ${przyciskUstawien}
+                    
+                    <div class="ikona-tlo rounded-full bg-white/5 p-2 w-max text-slate-300 group-hover:text-primary transition-colors relative z-0 pointer-events-none">
+                        <span class="material-symbols-outlined">lightbulb</span>
+                    </div>
+                    <div class="relative z-0 pointer-events-none">
+                        <h3 class="font-display text-lg md:text-xl font-bold text-slate-200 group-hover:text-white leading-tight">${nazwa}</h3>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Master Switch
+        grid.innerHTML += `
+            <button onclick="wylaczWszystkieSwiatla()" class="glass-tile danger group relative flex aspect-square flex-col justify-center items-center text-center rounded-2xl p-6 z-20">
+                <div class="mb-3 rounded-full bg-red-500/10 p-3 text-red-500 transition-all duration-300 pointer-events-none">
+                    <span class="material-symbols-outlined text-[32px]">power_settings_new</span>
+                </div>
+                <h3 class="font-display text-lg font-bold text-white leading-tight pointer-events-none">Wyłącz<br/>wszystko</h3>
+            </button>
+        `;
+
+        // --- BAZOWE FUNKCJE ---
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function showScreen(id) {
+            document.querySelectorAll('.app-screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- LOGIKA OŚWIETLENIA (zapalone/zgaszone) ---
+        function przelaczSwiatlo(kafelek, id) {
+            kafelek.classList.toggle('wlaczony');
+            if (window.eel) eel.wyslij_przez_bluetooth(parseInt(id))();
+        }
+
+        function wylaczWszystkieSwiatla() {
+            document.querySelectorAll('.swiatlo-btn.wlaczony').forEach(k => k.classList.remove('wlaczony'));
+            if (window.eel) eel.wyslij_przez_bluetooth(99)(); 
+        }
+
+        function sendCommand(cmd) {
+            if (window.eel) eel.wyslij_przez_bluetooth(cmd)();
+        }
+
+        // --- LOGIKA PANELU JASNOŚCI (%) ---
+        let aktywneIdJasnosc = null;
+
+        function otworzPanel(id, nazwa) {
+            aktywneIdJasnosc = id;
+            document.getElementById('dimmer-title').innerText = nazwa;
+            
+            const modal = document.getElementById('dimmer-modal');
+            const content = document.getElementById('dimmer-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function zamknijPanel() {
+            const modal = document.getElementById('dimmer-modal');
+            const content = document.getElementById('dimmer-content');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            aktywneIdJasnosc = null;
+        }
+
+        function aktualizujZSuwaka(val) {
+            document.getElementById('dimmer-input').value = val;
+        }
+
+        function aktualizujZInputa(val) {
+            if (val > 100) val = 100;
+            if (val < 0) val = 0;
+            document.getElementById('dimmer-slider').value = val;
+        }
+
+        function wyslijJasnosci() {
+            if (aktywneIdJasnosc !== null) {
+                let val = parseInt(document.getElementById('dimmer-input').value);
+                if(isNaN(val)) val = 0;
+                
+                // Wizualna poprawka: jeśli ustawiamy więcej niż 0%, podświetl kafelek
+                const kafelek = document.querySelector(`.swiatlo-btn[data-id="${aktywneIdJasnosc}"]`);
+                if (kafelek) {
+                    if (val > 0) kafelek.classList.add('wlaczony');
+                    else kafelek.classList.remove('wlaczony');
+                }
+
+                // Wysyłanie jako 2-bajtowy pakiet
+                if (window.eel) {
+                    eel.ustaw_jasnosc_bt(aktywneIdJasnosc, val)();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
